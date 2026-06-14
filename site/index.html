@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yoke — 会自己说自己过时的 AI 开发流水线</title>
+<meta name="description" content="Yoke 是一套 AI 自治开发流水线，内置活文档系统。它的文档锚定在真实代码上，代码一改，过时的文档会自己标红——不靠人记得去看。100% 本地，零依赖。">
+<style>
+:root{
+  --bg:#ffffff; --ink:#111111; --ink2:#5b5b60; --ink3:#8b8b90;
+  --card:#f6f6f6; --line:#ececec;
+  --fresh:#16a34a; --stale:#d97706; --missing:#dc2626;
+  --accent:#111111;
+  --r:24px;
+  --font:"PingFang SC","Helvetica Neue",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;line-height:1.5}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+
+/* ---------- nav ---------- */
+nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.78);backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:56px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:600;font-size:17px;letter-spacing:-.01em}
+.dots{display:inline-flex;gap:4px}
+.dots i{width:9px;height:9px;border-radius:50%;display:block}
+.dots i:nth-child(1){background:var(--fresh)}
+.dots i:nth-child(2){background:var(--stale)}
+.dots i:nth-child(3){background:var(--missing)}
+.navlinks{display:flex;align-items:center;gap:26px;font-size:14px;color:var(--ink2)}
+.navlinks a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:7px;background:var(--ink);color:#fff;padding:8px 16px;border-radius:999px;font-size:14px;font-weight:500;transition:transform .15s,opacity .15s}
+.btn:hover{transform:translateY(-1px);opacity:.9}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid #d9d9d9}
+
+/* ---------- hero ---------- */
+.hero{text-align:center;padding:96px 0 56px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2);background:var(--card);border:1px solid var(--line);padding:6px 14px;border-radius:999px;margin-bottom:28px}
+.eyebrow b{color:var(--fresh);font-weight:600}
+h1{font-size:64px;line-height:1.05;font-weight:700;letter-spacing:-.03em;margin-bottom:22px}
+h1 .g{background:linear-gradient(90deg,#16a34a,#d97706 55%,#dc2626);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{font-size:20px;color:var(--ink2);max-width:680px;margin:0 auto 36px;line-height:1.55}
+.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:18px}
+.install{display:inline-flex;align-items:center;gap:14px;background:#0d1117;color:#e6edf3;font-family:var(--mono);font-size:14px;padding:13px 18px;border-radius:12px;margin-top:14px}
+.install .p{color:#6e7681}
+.install button{background:#21262d;color:#adbac7;border:0;padding:5px 10px;border-radius:7px;font-size:12px;cursor:pointer;font-family:var(--font)}
+.install button:hover{background:#30363d}
+.metrics{display:flex;gap:40px;justify-content:center;margin-top:54px;flex-wrap:wrap}
+.metric .n{font-size:30px;font-weight:700;letter-spacing:-.02em}
+.metric .l{font-size:13px;color:var(--ink3);margin-top:2px}
+
+/* ---------- showcase (dashboard mock) ---------- */
+.showcase{padding:20px 0 40px}
+.frame{background:#0d1117;border:1px solid #21262d;border-radius:var(--r);overflow:hidden;box-shadow:0 40px 80px -30px rgba(0,0,0,.35)}
+.frame .bar{display:flex;align-items:center;gap:7px;padding:13px 16px;border-bottom:1px solid #21262d}
+.frame .bar i{width:11px;height:11px;border-radius:50%;background:#30363d;display:block}
+.frame .bar i:nth-child(1){background:#ff5f56}.frame .bar i:nth-child(2){background:#ffbd2e}.frame .bar i:nth-child(3){background:#27c93f}
+.frame .bar span{margin-left:8px;color:#6e7681;font-size:12px;font-family:var(--mono)}
+.dash{padding:26px;color:#e6edf3}
+.dash h4{font-size:17px;margin-bottom:3px}
+.dash .dsub{color:#8b949e;font-size:12px;margin-bottom:18px}
+.stat4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.stat{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:14px}
+.stat .n{font-size:26px;font-weight:700}
+.stat .l{font-size:11px;color:#8b949e;text-transform:uppercase;letter-spacing:.04em}
+.health{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:14px;margin-bottom:18px;font-size:13px}
+.track{height:10px;background:#30363d;border-radius:6px;overflow:hidden;margin-top:8px}
+.fill{height:100%;width:67%;background:linear-gradient(90deg,#16a34a,#d97706)}
+.drow{display:grid;grid-template-columns:90px 78px 1fr 1fr;gap:10px;padding:10px 0;border-top:1px solid #21262d;font-size:12px;align-items:center}
+.drow code{background:#21262d;padding:2px 6px;border-radius:5px;font-size:11px;color:#adbac7}
+.bdg{display:inline-block;color:#fff;font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px}
+.bdg.f{background:var(--fresh)}.bdg.s{background:var(--stale)}.bdg.m{background:var(--missing)}
+
+/* ---------- section ---------- */
+section.blk{padding:88px 0}
+.kicker{font-size:13px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;text-align:center;margin-bottom:14px}
+h2{font-size:40px;font-weight:700;letter-spacing:-.025em;text-align:center;margin-bottom:14px}
+.lead{font-size:18px;color:var(--ink2);text-align:center;max-width:640px;margin:0 auto 56px;line-height:1.55}
+
+/* why row */
+.why{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center;margin-bottom:24px}
+.why.rev .txt{order:2}
+.whycard{background:var(--card);border-radius:var(--r);padding:40px;min-height:340px;display:flex;flex-direction:column;justify-content:center}
+.why .txt{padding:14px 26px}
+.why .tag{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--stale);margin-bottom:12px}
+.why h3{font-size:26px;letter-spacing:-.02em;margin-bottom:12px}
+.why p{font-size:16px;color:var(--ink2);line-height:1.65}
+.codeblk{font-family:var(--mono);font-size:13px;background:#0d1117;color:#e6edf3;border-radius:12px;padding:18px;line-height:1.7;overflow:auto}
+.codeblk .c{color:#6e7681}.codeblk .g{color:#3fb950}.codeblk .o{color:#d29922}.codeblk .r{color:#f85149}
+
+/* capability grid */
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.cap{background:var(--card);border-radius:18px;padding:24px;transition:transform .18s}
+.cap:hover{transform:translateY(-4px)}
+.cap .ic{font-size:22px;margin-bottom:14px;display:block}
+.cap h4{font-size:16px;margin-bottom:6px;letter-spacing:-.01em}
+.cap p{font-size:13.5px;color:var(--ink2);line-height:1.55}
+
+/* pipeline */
+.flow{background:var(--card);border-radius:var(--r);padding:44px;font-family:var(--mono);font-size:13px;color:var(--ink);overflow:auto;line-height:2;text-align:center}
+.flow b{color:var(--ink)}
+.flow .ar{color:var(--ink3)}
+
+/* compare */
+.cmp{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.cmp .col{border:1px solid var(--line);border-radius:18px;padding:26px}
+.cmp .col.me{border:2px solid var(--ink);position:relative}
+.cmp .col.me::after{content:"Yoke";position:absolute;top:-11px;left:26px;background:var(--ink);color:#fff;font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px}
+.cmp h4{font-size:16px;margin-bottom:14px}
+.cmp ul{list-style:none;font-size:13.5px;color:var(--ink2);line-height:1.9}
+.cmp li::before{content:"";margin-right:7px}
+.cmp li.no::before{content:"✕ ";color:var(--missing)}
+.cmp li.ok::before{content:"✓ ";color:var(--fresh)}
+
+/* cta band */
+.band{background:#0d1117;border-radius:var(--r);padding:72px 40px;text-align:center;color:#fff;margin:40px 0}
+.band h2{color:#fff}
+.band .lead{color:#8b949e}
+.band .install{margin-top:8px}
+
+footer{border-top:1px solid var(--line);padding:40px 0;color:var(--ink3);font-size:13px}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px}
+footer a:hover{color:var(--ink)}
+
+@media(max-width:820px){
+  h1{font-size:42px} h2{font-size:30px}
+  .why,.cmp,.stat4{grid-template-columns:1fr}
+  .why.rev .txt{order:0}
+  .grid{grid-template-columns:repeat(2,1fr)}
+  .metrics{gap:26px}
+  .drow{grid-template-columns:1fr 70px;gap:6px}
+  .drow .d3,.drow .d4{display:none}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand"><span class="dots"><i></i><i></i><i></i></span>Yoke</div>
+    <div class="navlinks">
+      <a href="#why">为什么</a>
+      <a href="#skills">能力</a>
+      <a href="#how">原理</a>
+      <a href="#compare">对比</a>
+      <a class="btn" href="https://github.com/Dashsoap/yoke">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow"><b>● 1.0</b> · Agent 驱动的开发流水线 + 活文档</div>
+    <h1>会<span class="g">自己说自己过时</span><br>的 AI 开发流水线</h1>
+    <p class="sub">Yoke 把开发拆成 19 个专业化 agent，做事和审查强制分开。文档锚定在真实代码上——代码一改，过时的文档自己标红，不靠人记得去看。100% 本地，零依赖。</p>
+    <div class="cta">
+      <a class="btn" href="https://github.com/Dashsoap/yoke">在 GitHub 上查看</a>
+      <a class="btn ghost" href="#how">看它怎么工作</a>
+    </div>
+    <div class="install">
+      <span class="p">$</span> claude plugin install yoke
+      <button onclick="navigator.clipboard&&navigator.clipboard.writeText('claude plugin install yoke');this.textContent='已复制'">复制</button>
+    </div>
+    <div class="metrics">
+      <div class="metric"><div class="n">19</div><div class="l">专业化 Agent</div></div>
+      <div class="metric"><div class="n">3 层</div><div class="l">活文档网络</div></div>
+      <div class="metric"><div class="n">100%</div><div class="l">本地 · 零依赖</div></div>
+      <div class="metric"><div class="n">3 端</div><div class="l">Claude · Cursor · Codex</div></div>
+    </div>
+  </div>
+</header>
+
+<!-- showcase: anchor dashboard mock -->
+<div class="showcase">
+  <div class="wrap">
+    <div class="frame">
+      <div class="bar"><i></i><i></i><i></i><span>anchor dashboard — 文档健康度</span></div>
+      <div class="dash">
+        <h4>活文档新鲜度</h4>
+        <div class="dsub">每一行是一条钉在代码上的文档。代码一变，文档自动翻成 STALE。</div>
+        <div class="stat4">
+          <div class="stat"><div class="n">12</div><div class="l">Anchors</div></div>
+          <div class="stat"><div class="n" style="color:var(--fresh)">8</div><div class="l">Fresh</div></div>
+          <div class="stat"><div class="n" style="color:var(--stale)">3</div><div class="l">Stale</div></div>
+          <div class="stat"><div class="n" style="color:var(--missing)">1</div><div class="l">Missing</div></div>
+        </div>
+        <div class="health"><b>文档健康度：67%</b> 的锚定文档与代码保持同步。<div class="track"><div class="fill"></div></div></div>
+        <div class="drow"><code>A-7f3a</code><span class="bdg m">MISSING</span><span class="d3">learning · auth-rls-deny</span><span class="d4">src/auth/mw.py · 已删除</span></div>
+        <div class="drow"><code>A-e428</code><span class="bdg s">STALE</span><span class="d3">learning · feat-id-format</span><span class="d4">scripts/search.py · generate_feat_id</span></div>
+        <div class="drow"><code>A-2b91</code><span class="bdg s">STALE</span><span class="d3">component · ChatContainer</span><span class="d4">src/chat/Container.tsx · render</span></div>
+        <div class="drow"><code>A-94ec</code><span class="bdg f">FRESH</span><span class="d3">component · BM25</span><span class="d4">scripts/search.py · BM25</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- why -->
+<section class="blk" id="why">
+  <div class="wrap">
+    <div class="kicker">核心差异</div>
+    <h2>别人的文档会悄悄烂掉<br>Yoke 的文档会主动报警</h2>
+    <p class="lead">活文档最大的问题不是写得不好，而是写完之后过时——而且是悄悄过时，你不知道哪句话已经失效。Yoke 用内容哈希把每条文档钉在它描述的那段代码上。</p>
+
+    <div class="why">
+      <div class="txt">
+        <span class="tag">⚠ 过时检测</span>
+        <h3>改一行代码，谁过时了一目了然</h3>
+        <p>每条 learning、每个组件规约、每条 trace 都锚定到具体的函数或类。代码一改，锚点的哈希就变，对应文档立刻翻成 stale——在代码移动的那一刻，而不是等某个 agent 后来碰巧发现文档不对。</p>
+      </div>
+      <div class="whycard">
+        <div class="codeblk"><span class="c"># coder 改完代码，收尾自动扫描</span>
+$ anchor scan
+
+Scanned 12 anchors —
+  fresh <span class="g">8</span> · stale <span class="o">3</span> · missing <span class="r">1</span>
+
+  A-e428 <span class="g">fresh</span> → <span class="o">stale</span>
+    (learning:feat-id-format
+     @ search.py generate_feat_id)</div>
+      </div>
+    </div>
+
+    <div class="why rev">
+      <div class="txt">
+        <span class="tag" style="color:var(--fresh)">✓ 局部再生</span>
+        <h3>只复核过时的那几条，省 token</h3>
+        <p>update-map 不再扫全部文档，只针对报红的锚点复核、改文档、重定基线。审计阶段还会把未处理的过时文档计入扣分——文档新鲜度第一次有了机器可检的硬闸门，不靠人记得去看。</p>
+      </div>
+      <div class="whycard" style="background:#0d1117">
+        <div class="codeblk" style="background:transparent;padding:0"><span class="c"># 改好文档后重定基线</span>
+$ anchor verify --anchor-id A-e428
+
+verified A-e428 —
+  re-baselined to 1fc3945f <span class="g">(fresh)</span>
+
+<span class="c"># 全部回到同步</span>
+$ anchor report
+<span class="g">All anchored docs are in sync.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- skills grid -->
+<section class="blk" id="skills" style="background:#fafafa">
+  <div class="wrap">
+    <div class="kicker">流水线</div>
+    <h2>19 个 agent，各司其职</h2>
+    <p class="lead">需求进，生产级代码 + 活文档出。做事的 agent 和审查的 agent 强制分开——这是让 AI 的错误变得可控、可发现、可修复的关键。</p>
+    <div class="grid">
+      <div class="cap"><span class="ic">📥</span><h4>propose / trace</h4><p>PM 与 Dev 两个需求入口，前提质疑 + 技术影响分析</p></div>
+      <div class="cap"><span class="ic">📐</span><h4>architect</h4><p>合约架构师，双产出 spec.md + 可 import 的类型文件</p></div>
+      <div class="cap"><span class="ic">🧪</span><h4>qa</h4><p>测试工程师，按 spec 先写测试（TDD RED）</p></div>
+      <div class="cap"><span class="ic">⚙️</span><h4>coder</h4><p>自愈循环 + 测试基线 + 自适应升级 + STUCK 协议</p></div>
+      <div class="cap"><span class="ic">🛡️</span><h4>audit</h4><p>七维评分 + 置信度 + 攻击路径证据链，一票否决</p></div>
+      <div class="cap"><span class="ic">🗺️</span><h4>update-map</h4><p>三层活文档 + 双向原子关系更新</p></div>
+      <div class="cap"><span class="ic">📌</span><h4>anchor</h4><p>文档锚定代码 + 内容哈希过时检测</p></div>
+      <div class="cap"><span class="ic">🚀</span><h4>ship</h4><p>自动 PR/MR + changelog + 审查就绪看板</p></div>
+      <div class="cap"><span class="ic">🔒</span><h4>guard</h4><p>编辑范围限制 + 危险命令拦截</p></div>
+      <div class="cap"><span class="ic">🧠</span><h4>learn</h4><p>JSONL 经验库 + 置信度演化，陈旧经验自动降权</p></div>
+      <div class="cap"><span class="ic">🌱</span><h4>init / origin</h4><p>空目录骨架引导 + 现有代码反推活文档</p></div>
+      <div class="cap"><span class="ic">🔭</span><h4>explore</h4><p>快速了解项目全貌、架构和功能模块</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- how -->
+<section class="blk" id="how">
+  <div class="wrap">
+    <div class="kicker">工作原理</div>
+    <h2>一条流水线，自适应调度</h2>
+    <p class="lead">两个需求入口共享同一条流水线。pipeline 根据任务复杂度（PATCH / FEATURE / REFACTOR）自动决定走哪些阶段——小改动跳过 spec，新功能走完整 TDD。</p>
+    <div class="flow">
+propose <span class="ar">(PM)</span> ┐<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├─▶ <b>pipeline</b> <span class="ar">→</span> <b>architect</b> <span class="ar">→</span> <b>qa</b> <span class="ar">→</span> <b>coder</b> <span class="ar">→</span> <b>audit</b> <span class="ar">→</span> <b>update-map</b> <span class="ar">→</span> <b>ship</b><br>
+trace <span class="ar">(Dev)</span> ┘&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ar">guard</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ar">anchor + learn</span>
+    </div>
+  </div>
+</section>
+
+<!-- compare -->
+<section class="blk" id="compare" style="background:#fafafa">
+  <div class="wrap">
+    <div class="kicker">为什么不是它们</div>
+    <h2>结构图懂代码，文档懂意图<br>Yoke 两头都占</h2>
+    <p class="lead">代码图谱工具精确但不懂"为什么这样设计"；LLM 文档工具可读但会幻觉、会过时。Yoke 把两者合起来，并让过时变得可见。</p>
+    <div class="cmp">
+      <div class="col">
+        <h4>代码图谱工具</h4>
+        <ul>
+          <li class="ok">调用关系精确</li>
+          <li class="ok">自动同步</li>
+          <li class="no">不懂设计意图</li>
+          <li class="no">不懂团队约定</li>
+          <li class="no">不记录踩坑</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h4>LLM 文档工具</h4>
+        <ul>
+          <li class="ok">懂语义、可读性强</li>
+          <li class="ok">能生成架构叙事</li>
+          <li class="no">会幻觉</li>
+          <li class="no">会悄悄过时</li>
+          <li class="no">需联网 / 上传代码</li>
+        </ul>
+      </div>
+      <div class="col me">
+        <h4>Yoke + anchor</h4>
+        <ul>
+          <li class="ok">懂意图、约定、踩坑</li>
+          <li class="ok">证据链 + 置信度评分</li>
+          <li class="ok">内容哈希检测过时</li>
+          <li class="ok">过时主动报警 + 扣分</li>
+          <li class="ok">100% 本地 · 零依赖</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- cta band -->
+<div class="wrap">
+  <div class="band">
+    <h2>给你的 AI 装上工程外骨架</h2>
+    <p class="lead">三平台 plugin 形态分发，一行命令装好。</p>
+    <div class="cta" style="margin-top:24px">
+      <a class="btn ghost" style="background:#fff" href="https://github.com/Dashsoap/yoke">⭐ Star on GitHub</a>
+    </div>
+    <div class="install" style="background:#161b22;margin:18px auto 0;display:inline-flex">
+      <span class="p">$</span> claude plugin install yoke
+      <button onclick="navigator.clipboard&&navigator.clipboard.writeText('claude plugin install yoke');this.textContent='已复制'">复制</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div><span class="brand" style="font-size:15px"><span class="dots"><i></i><i></i><i></i></span>Yoke</span> &nbsp;·&nbsp; 分工 + 文件通信 + 做事和审查分开</div>
+    <div><a href="https://github.com/Dashsoap/yoke">GitHub</a> &nbsp;·&nbsp; Agent 驱动的开发流水线 · 100% 本地</div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yoke Anchor — Doc Freshness</title>
+<style>
+:root{color-scheme:light dark}
+body{font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+margin:0;background:#0d1117;color:#e6edf3}
+.wrap{max-width:960px;margin:0 auto;padding:32px 20px}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:#8b949e;font-size:13px;margin-bottom:24px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.card{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:16px}
+.card .n{font-size:30px;font-weight:700}
+.card .l{font-size:12px;color:#8b949e;text-transform:uppercase;letter-spacing:.04em}
+.health{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:16px;margin-bottom:24px}
+.track{height:12px;background:#30363d;border-radius:6px;overflow:hidden;margin-top:8px}
+.fill{height:100%;width:100%;background:#16a34a;transition:width .4s}
+table{width:100%;border-collapse:collapse;background:#161b22;border:1px solid #30363d;border-radius:10px;overflow:hidden}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid #21262d;vertical-align:top;font-size:13px}
+th{background:#1c2129;color:#8b949e;text-transform:uppercase;font-size:11px;letter-spacing:.04em}
+code{background:#21262d;padding:1px 5px;border-radius:4px;font-size:12px}
+small{color:#8b949e}
+.b{display:inline-block;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
+.foot{color:#8b949e;font-size:12px;margin-top:20px;text-align:center}
+</style></head><body><div class="wrap">
+<h1>Yoke Anchor — Living-Doc Freshness</h1>
+<div class="sub">Each row is a doc pinned to a span of code. When the code changes, the doc flips to STALE — automatically. Generated 2026-06-14 21:20.</div>
+<div class="cards">
+  <div class="card"><div class="n">2</div><div class="l">Anchors</div></div>
+  <div class="card"><div class="n" style="color:#16a34a">2</div><div class="l">Fresh</div></div>
+  <div class="card"><div class="n" style="color:#d97706">0</div><div class="l">Stale</div></div>
+  <div class="card"><div class="n" style="color:#dc2626">0</div><div class="l">Missing</div></div>
+</div>
+<div class="health"><b>Doc health: 100%</b> of anchored docs are in sync with their code.
+<div class="track"><div class="fill"></div></div></div>
+<table><thead><tr><th>Anchor</th><th>Status</th><th>Doc</th><th>Symbol</th><th>Code</th></tr></thead>
+<tbody>
+<tr><td><code>A-fa22c575</code></td><td><span class='b' style='background:#16a34a'>FRESH</span></td><td>learning<br><small>feat-id-format-type-hash-slug</small></td><td>generate_feat_id</td><td><code>scripts/search.py</code><br><small>SYM:generate_feat_id</small></td></tr>
+<tr><td><code>A-94ec2ae5</code></td><td><span class='b' style='background:#16a34a'>FRESH</span></td><td>component<br><small>scripts/search.py#BM25</small></td><td>BM25</td><td><code>scripts/search.py</code><br><small>SYM:BM25</small></td></tr>
+</tbody></table>
+<div class="foot">Yoke Anchor · graph-grounded living docs · 100% local</div>
+</div></body></html>
