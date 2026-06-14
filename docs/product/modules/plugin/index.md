@@ -12,6 +12,4 @@
 
 ## 已知限制
 
-- 当前 owner/author 字段是 Anonymous 占位(脱敏后未填)
-- 三平台共享同一份 skills/,通过文件系统约定而非平台 API
-- repository URL 是 `<your-org>` 占位,真开源时需替换
+- 三平台共享同一份 skills/，通过文件系统约定而非平台 API

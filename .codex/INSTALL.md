@@ -11,7 +11,7 @@
 
 1. **克隆仓库：**
    ```bash
-   git clone git@github.com:<your-org>/yoke.git ~/.codex/yoke
+   git clone git@github.com:Dashsoap/yoke.git ~/.codex/yoke
    ```
 
 2. **创建 skills 符号链接：**

@@ -2,7 +2,7 @@
   "name": "yoke",
   "description": "Agent-driven development pipeline with living documentation",
   "owner": {
-    "name": "Anonymous"
+    "name": "Dashsoap"
   },
   "plugins": [
     {
@@ -11,7 +11,7 @@
       "version": "1.1.0",
       "source": "./",
       "author": {
-        "name": "Anonymous"
+        "name": "Dashsoap"
       }
     }
   ]
