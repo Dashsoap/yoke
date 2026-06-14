@@ -1,0 +1,3 @@
+anchor_id,doc_kind,doc_ref,code_file,span,symbol,content_hash,status,added
+A-fdd6ce8d,component,scripts/search.py#BM25,scripts/search.py,L89-L141,BM25 ranking,f4275e63ede91db1,fresh,2026-06-14
+A-e428fe44,learning,feat-id-format-type-hash-slug,scripts/search.py,L185-L214,generate_feat_id,1fc3945f90b75f7f,fresh,2026-06-14

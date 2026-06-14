@@ -1,6 +1,6 @@
 # skills 模块
 
-> Yoke 框架核心 — 18 个 SKILL.md,每个是一个 Agent 的指令书。
+> Yoke 框架核心 — 19 个 SKILL.md,每个是一个 Agent 的指令书。
 
 ## 用户旅程
 
@@ -23,6 +23,7 @@
 | `post-trace` | Core | 内部 hook(trace 后处理) |
 | `guard` | Safety | 编辑范围限制 + 危险命令拦截 |
 | `learn` | Safety | JSONL 经验库 + 置信度演化 |
+| `anchor` | Safety | **新加 v7.3** — 文档锚定代码 + 内容哈希过时检测(stale/missing) |
 | `init` | Docs | **新加 v7.2** — 空目录骨架引导(IMP-01 解法) |
 | `origin` | Docs | 引导活文档(代码反推) + 校准 |
 | `migrate` | Docs | 文档迁移 + 索引迁移 |

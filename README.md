@@ -85,6 +85,7 @@ ln -s ~/.codex/yoke/skills ~/.agents/skills/yoke
 |-------|------|
 | `/guard` | 编辑范围限制 + 危险命令拦截，pipeline worktree 模式自动激活 |
 | `/learn` | 跨会话经验捕获（模式/陷阱/偏好），/audit 和 /coder 自动贡献 |
+| `/anchor` | 文档锚定代码 + 内容哈希过时检测，/coder 收尾扫描、/audit 扣分、/update-map 局部复核 |
 
 ### Docs — 文档管理
 
