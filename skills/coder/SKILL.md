@@ -92,6 +92,22 @@ LOOP:
   10. GOTO LOOP
 ```
 
+## 收尾：锚点扫描（anchor）
+
+<HARD-GATE>
+测试转绿、循环成功退出后，如果 `docs/traces/anchors.csv` 存在，必须跑一次锚点扫描，把可能因本次改动而过时的文档传给后续阶段。
+</HARD-GATE>
+
+你改的是代码，而活文档（learnings / 规约层组件 / trace）可能锚定在你刚改的那几行上。跑：
+
+```bash
+python3 {ray_plugin_path}/scripts/anchor.py scan --project-dir {项目根路径}
+```
+
+把输出里翻成 `stale` / `missing` 的锚点收集进完成摘要的 `stale_docs` 段（见下方）。你**不修文档**——那是 /update-map 和 /learn 的职责。你只负责"发现并上报":代码一变就报警，比 learn 事后 `confidence -2` 的惩罚早一步。
+
+如 anchors.csv 不存在或为空，跳过本步，`stale_docs` 留空。
+
 ## 自适应升级
 
 不再机械跑满 10 轮。根据错误模式动态调整策略。
@@ -237,6 +253,11 @@ LOOP:
   - {修改的文件路径 2}
 - iterations: {N}
 - preexisting_failures: {M} 个（已排除）
+- stale_docs:                          # 锚点扫描结果，无则留空
+  - anchor_id: {A-xxxx}
+    doc: {doc_kind}:{doc_ref}
+    code: {code_file} {span}
+    status: {stale | missing}
 - notes: 迭代 {N} 轮。{关键失败摘要}
 - learnings:
   - type: {pattern | pitfall}

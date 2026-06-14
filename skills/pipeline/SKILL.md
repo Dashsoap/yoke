@@ -189,6 +189,7 @@ Pipeline 读取此摘要块，写入 execution-log，并传递给下一个 phase
   {测试命令} {具体测试文件路径}
   ```
 - 全部通过后，跑一次全量确认无回归
+- **锚点扫描**：如 `docs/traces/anchors.csv` 存在，coder 收尾跑 `anchor.py scan`，把 stale/missing 锚点写入完成摘要的 `stale_docs` 段，向下游 Phase 5/6 传递
 - **处理 coder stuck**：如 coder 返回 `status: stuck`，读取根因分析报告 `docs/audit/STUCK-{FEAT-ID}.md`，向用户展示假设和建议，等待用户决策（调整 spec？修改测试？手动介入？）
 
 ### Phase 5：质量审计
@@ -209,6 +210,7 @@ Pipeline 读取此摘要块，写入 execution-log，并传递给下一个 phase
   - 测试文件路径
   - Coder 迭代次数（从 coder 摘要的 notes 获取）
 - 完整 100 分制评分，按组件模板级别检查合规性
+- **锚点闸门**：如 anchors.csv 存在,audit 跑 `anchor.py report`,未认领复核的 stale 在"产品文档就绪度"维度扣分,missing 进阻塞类发现
 - 得分 >= 80 通过；60-79 软拒（最多 2 次重试）；< 60 硬拒
 
 ### Phase 6：知识沉淀
@@ -220,6 +222,7 @@ Pipeline 读取此摘要块，写入 execution-log，并传递给下一个 phase
   - 所有 phase 产出的 artifacts 列表
 - 验证受影响的组件文件 `modules/{module}/{ComponentName}.md` 已更新
 - 验证关系表双向一致
+- **锚点复核**：如 anchors.csv 存在,update-map 接收 coder 的 `stale_docs` 清单,只复核 stale/missing 那几条,改好文档后跑 `anchor.py verify` 重定基线(局部再生,不动 fresh 锚点)
 
 ### Phase 6.5：经验捕获
 

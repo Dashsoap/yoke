@@ -179,6 +179,28 @@ docs/product/
 
 如审计报告含技术债项目，追加到 `docs/traces/tech_debt.csv`。已解决时在 tech_debt.csv 中填入 resolved_by 日期（不删除行）。
 
+### 第 5 层：锚点复核与重定基线（anchor）
+
+如果 `docs/traces/anchors.csv` 存在，本阶段是修复文档过时的唯一职责方。流程：
+
+1. **读 stale 清单**。来源有二：coder 完成摘要的 `stale_docs` 段，或自己跑一次：
+   ```bash
+   python3 {ray_plugin_path}/scripts/anchor.py report --project-dir {项目根路径}
+   ```
+2. **只复核 stale / missing 的那几条**，不动 fresh 的——这是局部再生，省 token。对每条：
+   - 打开锚点指向的 `code_file` 当前内容，对照它绑定的文档（learning / 规约层组件 / trace）
+   - 文档若确实过时 → 按第 2 层规则更新对应文档
+   - 文档其实仍成立（只是代码动了无关部分）→ 直接进入下一步重定基线
+3. **重定基线**。文档已与新代码一致后，对每条跑：
+   ```bash
+   python3 {ray_plugin_path}/scripts/anchor.py verify --anchor-id {A-xxxx} --project-dir {项目根路径}
+   ```
+   状态回到 `fresh`，锚点记住新的代码哈希。
+4. **missing 锚点**（代码被删/大改）→ 由你判断：文档退役则删除对应锚点行；代码搬家则用 `anchor.py add` 重新框定范围（按 anchor_id upsert 覆盖）。
+5. **新增高价值文档时顺手锚定**。若本次为某段具体代码新增了 learning 或完整级不变式，用 `anchor.py add` 把它钉上，今后这段代码一改它自动进复核队列。
+
+如 anchors.csv 不存在或为空，跳过本层。
+
 ## 规则
 
 1. **不捏造** — 只记录代码中实际存在的内容
