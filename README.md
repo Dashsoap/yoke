@@ -1,84 +1,86 @@
+> **Language**: English · [中文](README.zh.md)
+
 # Yoke
 
-**会自己说自己过时的 AI 开发流水线。**
+**The AI development pipeline whose docs tell you when they go stale.**
 
-Yoke 把开发拆成一组专业化 agent，做事和审查强制分开，内置三层活文档系统。它最关键的一点：文档锚定在真实代码上——代码一改，过时的文档会自己标红，不靠人记得去看。100% 本地，零依赖。
+Yoke splits development across a set of specialized agents, enforces a hard separation between *doing* and *reviewing*, and ships with a three-layer living-documentation system. Its defining feature: every doc is anchored to the real code it describes — change the code, and the stale doc flags itself in red, so nobody has to remember to go check. 100% local, zero dependencies.
 
-[落地页](https://dashsoap.github.io/yoke/) · [GitHub](https://github.com/Dashsoap/yoke) · 三端：Claude Code · Cursor · Codex
+[Landing page](https://dashsoap.github.io/yoke/) · [GitHub](https://github.com/Dashsoap/yoke) · Three platforms: Claude Code · Cursor · Codex
 
 ---
 
-## 30 秒看懂杀手锏：改代码 → 文档标红
+## The killer feature in 30 seconds: change code → docs turn red
 
-活文档最大的问题不是写得不好，而是写完之后悄悄过时——你不知道哪句话已经失效。Yoke 用内容哈希把每条文档钉在它描述的那段代码（函数/类）上。代码一改，锚点哈希就变，对应文档立刻翻成 `stale`，在代码移动的那一刻，而不是等某个 agent 后来碰巧发现文档不对。
+The real problem with living documentation isn't that it's written badly — it's that it silently rots after you write it, and you have no idea which sentence has gone wrong. Yoke uses content hashing to pin every doc to the exact span of code it describes (a function or class). The moment the code changes, the anchor's hash changes, and the corresponding doc flips to `stale` — at the instant the code moves, not whenever some agent later happens to notice the doc is wrong.
 
-不用安装、不碰你的仓库，一条命令亲眼看一遍（在隔离临时目录里跑，纯 `python3`，零依赖）：
+No install, no touching your repo — see it for yourself with one command (runs in an isolated temp dir, pure `python3`, zero deps):
 
 ```bash
 bash scripts/anchor-demo.sh
 ```
 
-它会走完整个闭环：
+It walks the full loop:
 
 ```
-$ anchor add ... --symbol-name make_token      # 把一条 learning 锚到函数上 → FRESH
-$ anchor scan                                  # 在文件顶部插 3 行注释 → 仍 FRESH（符号模式抗行号位移）
-$ anchor report                                # 把 token 从 8 位改成 12 位 → STALE！文档自己报警
-$ anchor verify --anchor-id A-xxxx             # 更新文档后重定基线 → 回到 FRESH
+$ anchor add ... --symbol-name make_token      # anchor a learning to a function → FRESH
+$ anchor scan                                  # insert 3 comment lines at the top → still FRESH (symbol mode resists line drift)
+$ anchor report                                # change token from 8 to 12 chars → STALE! the doc raises its own alarm
+$ anchor verify --anchor-id A-xxxx             # re-baseline after fixing the doc → back to FRESH
 ```
 
-关键设计：**符号模式优于行号模式**。锚定按符号名重新定位再哈希函数体，所以在上方插入无关代码不会误报 stale——只有真正改动被锚函数的内容才会触发。这是让"文档健康度看板"不被假阳性淹没、从而值得信任的前提。
+Key design: **symbol mode beats line mode.** Anchoring re-locates the symbol by name and then hashes its body, so inserting unrelated code above it never false-triggers `stale` — only a real change to the anchored function's content does. This is what keeps the "doc health dashboard" from drowning in false positives, and therefore what makes it trustworthy.
 
-在你自己的项目里启用：
+Enable it in your own project:
 
 ```bash
 python3 scripts/anchor.py add --doc-kind learning --doc-ref <key> --code-file <f> --symbol-name <fn>
-python3 scripts/anchor.py report                       # 给人/agent 看的过时报告
-python3 scripts/anchor.py dashboard                    # 生成单文件 HTML 健康度看板
+python3 scripts/anchor.py report                       # staleness report for humans/agents
+python3 scripts/anchor.py dashboard                    # generate a single-file HTML health dashboard
 ```
 
-> 为什么这是差异点：代码图谱工具精确但不懂设计意图；LLM 文档工具可读但会幻觉、会悄悄过时。Yoke 两头都占，并让"过时"第一次变得机器可检——audit 阶段会把未处理的过时文档计入扣分，成为硬闸门。
+> Why this is the differentiator: code-graph tools are precise but don't understand design intent; LLM-doc tools are readable but hallucinate and silently rot. Yoke does both — and makes "stale" machine-checkable for the first time: the audit stage docks points for unaddressed stale docs, turning freshness into a hard gate.
 
 ---
 
-## 工作原理
+## How it works
 
-需求进，生产级代码 + 活文档出。产品经理用 `/propose`，开发者用 `/trace`，两个入口共享同一条流水线。
+Requirements in, production-grade code + living docs out. Product managers use `/propose`, developers use `/trace` — both entry points share the same pipeline.
 
 ```
 propose (PM) ──┐
                ├──→ _trace-persist → pipeline → architect → qa + coder → audit → update-map → ship
 trace   (Dev) ─┘                        │                      │           │
                                       guard                  learn ←─── learn
-                                    (保护编辑范围)      (经验捕获 + anchor 过时检测)
+                                  (scope protection)   (experience capture + anchor staleness)
 ```
 
-确认后 `/pipeline` 会根据复杂度自动调度后续阶段：生成类型合约、编写测试、实现代码、质量审计、更新文档、创建 PR——全程自治。
+Once confirmed, `/pipeline` adaptively schedules the downstream stages by complexity: generate type contracts, write tests, implement code, run a quality audit, update docs, open a PR — fully autonomous.
 
-## 安装
+## Install
 
 ### Claude Code
 
 ```bash
-# 1. 添加 marketplace（在终端中执行）
+# 1. Add the marketplace (run in your terminal)
 claude plugin marketplace add https://github.com/Dashsoap/yoke.git
 
-# 2. 安装（全局，所有项目可用）
+# 2. Install (globally, available in all projects)
 claude plugin install yoke
 
-# 或仅为当前项目安装
+# Or install for the current project only
 claude plugin install yoke --scope project
 ```
 
-安装后重启 Claude Code 会话生效。
+Restart your Claude Code session for it to take effect.
 
 ### Cursor
 
 ```bash
-# 1. 克隆仓库
+# 1. Clone the repo
 git clone https://github.com/Dashsoap/yoke.git ~/.cursor/yoke
 
-# 2. 复制 skills 到项目
+# 2. Copy skills into your project
 mkdir -p .cursor/skills
 cp -r ~/.cursor/yoke/skills .cursor/skills/yoke
 ```
@@ -86,82 +88,82 @@ cp -r ~/.cursor/yoke/skills .cursor/skills/yoke
 ### Codex
 
 ```bash
-# 1. 克隆仓库
+# 1. Clone the repo
 git clone https://github.com/Dashsoap/yoke.git ~/.codex/yoke
 
-# 2. 创建 skills 符号链接
+# 2. Symlink the skills
 mkdir -p ~/.agents/skills
 ln -s ~/.codex/yoke/skills ~/.agents/skills/yoke
 
-# 3. 重启 Codex
+# 3. Restart Codex
 ```
 
 ## Skills
 
-### Intake — 需求入口
+### Intake — requirement entry points
 
-| Skill | 使用者 | 职责 |
-|-------|--------|------|
-| `/propose` | 产品经理 | 前提质疑 + 产品语言需求描述，输出含替代方案的产品简报 |
-| `/trace` | 开发者 | 技术影响分析、组件级评估、治理合规双源、完整 trace |
-| `_trace-persist` | 内部 | 持久化引擎（ID 生成、文件写入、CSV 索引），由 propose/trace 调用 |
+| Skill | User | Responsibility |
+|-------|------|----------------|
+| `/propose` | Product manager | Premise-challenging + requirements in product language, outputs a product brief with alternatives |
+| `/trace` | Developer | Technical impact analysis, component-level assessment, dual-source governance/compliance, full trace |
+| `_trace-persist` | Internal | Persistence engine (ID generation, file writes, CSV indexing), called by propose/trace |
 
-### Core — 开发流水线
+### Core — development pipeline
 
-| Skill | 触发时机 | 职责 |
-|-------|---------|------|
-| `/pipeline` | trace 确认后 | 根据复杂度自适应调度后续阶段 |
-| `/architect` | pipeline 调度 | OpenSpec 类型合约、不变式、FSM、故障旅程 |
-| `/qa` | 合约就绪 | TDD 测试套件 + API mock，先于实现 |
-| `/coder` | 测试 RED | 自愈循环 + 测试基线 + 自适应升级 + 根因分析 |
-| `/audit` | 测试通过 | 置信度评分 + 证据链审计，不变式违反 = 一票否决 |
-| `/update-map` | 审计通过 | 更新 MAP.md、需求追溯、产品手册、技术债 |
-| `/ship` | update-map 后 | 创建 PR/MR、生成 changelog、审查就绪看板 |
+| Skill | Trigger | Responsibility |
+|-------|---------|----------------|
+| `/pipeline` | After trace is confirmed | Adaptively schedule downstream stages by complexity |
+| `/architect` | Scheduled by pipeline | OpenSpec type contracts, invariants, FSM, failure journeys |
+| `/qa` | Contract ready | TDD test suite + API mocks, before implementation |
+| `/coder` | Tests RED | Self-healing loop + test baseline + adaptive escalation + root-cause analysis |
+| `/audit` | Tests pass | Confidence scoring + evidence-chain audit, invariant violation = hard veto |
+| `/update-map` | Audit passed | Update MAP.md, requirement traceability, product handbook, tech debt |
+| `/ship` | After update-map | Create PR/MR, generate changelog, review-readiness board |
 
-### Safety — 安全与经验
+### Safety — guardrails and experience
 
-| Skill | 职责 |
-|-------|------|
-| `/guard` | 编辑范围限制 + 危险命令拦截，pipeline worktree 模式自动激活 |
-| `/learn` | 跨会话经验捕获（模式/陷阱/偏好），/audit 和 /coder 自动贡献 |
-| `/anchor` | **杀手锏**：文档锚定代码 + 内容哈希过时检测。/coder 收尾扫描、/audit 扣分、/update-map 局部复核 |
+| Skill | Responsibility |
+|-------|----------------|
+| `/guard` | Edit-scope limits + dangerous-command interception, auto-activated in pipeline worktree mode |
+| `/learn` | Cross-session experience capture (patterns/pitfalls/preferences), auto-contributed by /audit and /coder |
+| `/anchor` | **Killer feature**: anchor docs to code + content-hash staleness detection. /coder scans at finish, /audit docks points, /update-map does localized review |
 
-### Docs — 文档管理
+### Docs — documentation management
 
-| Skill | 职责 |
-|-------|------|
-| `/init` | **新项目骨架引导**（空目录跑 origin 会失败 → 用 init，问 2 个问题、写最小 PRODUCT-MAP + 5 CSV） |
-| `/origin` | 引导活文档系统（Genesis）、校准现有文档（Reconcile） |
-| `/migrate` | 产品文档迁移（--docs）、索引迁移（--index） |
-| `/digest` | 归纳碎片 trace 进产品模块文件，清理过时、合并重复 |
-| `/explore` | 快速了解项目全貌、架构和功能模块 |
+| Skill | Responsibility |
+|-------|----------------|
+| `/init` | **New-project scaffolding** (running origin in an empty dir fails → use init: asks 2 questions, writes a minimal PRODUCT-MAP + 5 CSVs) |
+| `/origin` | Bootstrap the living-docs system (Genesis), calibrate existing docs (Reconcile) |
+| `/migrate` | Product-doc migration (--docs), index migration (--index) |
+| `/digest` | Fold fragmented traces into product module files, prune stale, merge duplicates |
+| `/explore` | Quickly understand the project's overall structure, architecture, and feature modules |
 
-## 快速开始
+## Quick start
 
 ```bash
-# 产品经理提需求
-/propose 用户希望在首页看到实时通知
+# PM raises a requirement
+/propose Users want to see real-time notifications on the homepage
 
-# 开发者提需求（含技术分析）
-/trace 用户希望在首页看到实时通知
+# Developer raises a requirement (with technical analysis)
+/trace Users want to see real-time notifications on the homepage
 
-# 确认需求后，启动流水线
+# After confirming the requirement, start the pipeline
 /pipeline
 
-# 流水线完成后，创建 PR
+# When the pipeline finishes, create a PR
 /ship
 
-# 查看项目经验库
+# Inspect the project's experience library
 /learn
 
-# 查看活文档健康度（哪些文档因代码改动而过时）
+# Check living-doc health (which docs went stale because code changed)
 python3 scripts/anchor.py report
 
-# 或者只想了解项目
+# Or just explore the project
 /explore
 ```
 
-## 更新
+## Update
 
 ```bash
 # Claude Code
