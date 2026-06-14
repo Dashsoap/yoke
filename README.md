@@ -127,4 +127,3 @@ claude plugin update yoke
 # Codex
 cd ~/.codex/yoke && git pull
 ```
-# yoke

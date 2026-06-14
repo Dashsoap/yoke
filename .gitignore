@@ -1,0 +1,20 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Editor
+.idea/
+*.swp
+
+# Node
+node_modules/
+
+# Local agent settings (keep template, ignore local overrides)
+.claude/settings.local.json

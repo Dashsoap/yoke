@@ -1,0 +1,12 @@
+{
+  "name": "yoke",
+  "description": "Yoke — Agent-driven development pipeline with living documentation. Propose/Trace → Architect → QA → Coder → Audit → Update-Map → Ship.",
+  "version": "1.1.0",
+  "author": {
+    "name": "Anonymous"
+  },
+  "homepage": "https://github.com/<your-org>/yoke",
+  "repository": "git@github.com:<your-org>/yoke.git",
+  "license": "MIT",
+  "keywords": ["yoke", "pipeline", "living-documentation", "tdd", "agent"]
+}
